@@ -10,9 +10,45 @@ class Progress_Bar():
     def __init__(self,
                  max_value, current_value=0,
                  width=10,
-                 format_str="PROGRESS BAR V.01 $(percent): [$(bar)] $(finish_message)",
+                 format_str="PROGRESS BAR V.01 $(percent): [$(bar)] $(status)",
                  complete=".", incomplete=" ",
-                 finish_message="Done!"):
+                 current_message="", finish_message="Done!", overflow_message="Overflow!",
+                 current_animation=None):
+        """The constructor of a Progress Bar.
+
+        Keyword arguments:
+        max_value         -- The maximum value to be associated with the progress bar
+        current_value     -- The current value for the progress bar, this can be over
+                            the maximum value. An alert can be specified if this
+                            occurs. (default 0)
+        width             -- The character width of the progress bar. Must be a positive
+                            integer. (default 10)
+        format_str        -- This is a string formatter for the progress bar. This allows
+                            specification of both string literals and operations. For
+                            example "Static string $(bar)" will create a
+                            progress bar that will have the format of
+                            "Static string" [PROGRESS_BAR]. See the documentation for all
+                            the operations available. Improper format names are handled.
+                            (default "PROGRESS BAR V.01 $(percent): [$(bar)] $(status)")
+        complete          -- The single character to represent progress completed in the bar.
+                            Please note that non-ascii characters, specifically for left->right
+                            oriented languages are not supported and may have undesirable output.
+                            (default ".")
+        incomplete        -- The single character to represent yet-to-be completed progress in
+                            the progress bar. Please note that non-ascii characters are not
+                            supported and may have undesirable output.
+        current_message   -- The message to be printed while the progress bar is below 100%.
+                            (default "")
+        finish_message    -- The message to be printed once the progress bar reaches 100%.
+                            (default "Done!")
+        overflow_message  -- The message to be printed once the progress bar goes over 100%.
+                            (default "Overflow!")
+        current_aniamtion -- A list of characters for an animation to be played while progress
+                            is less than 100%. WARNING: If specified, this animation will
+                            override any messages specified for current_message.
+                            (default None)
+
+        """
         self.max_value = max_value
         self.current_value = current_value
 
@@ -26,7 +62,9 @@ class Progress_Bar():
         self.complete_color = None
         self.incomplete_color = None
 
-        self.finish_message=finish_message
+        self.current_message = current_message
+        self.finish_message = finish_message
+        self.overflow_message = overflow_message
 
         # Determine order of strings and operations for progress bar.
         self.bar_format = self.__parse_format()
@@ -51,9 +89,9 @@ class Progress_Bar():
         operation_groups = re.finditer(regex, self.format)
         current_index = 0
         prev_group = None
+        # For each regex return, determine their format and if they are correct specifiers
         for group in operation_groups:
             string_literal = self.format[current_index : group.start()]
-            # print "String Literal:", string_literal
             operation = self.determine_operation(group.group(0))
             bar_format.append(string_literal)
             bar_format.append(operation)
@@ -65,8 +103,7 @@ class Progress_Bar():
         return bar_format
 
     def __create_bar(self):
-        """
-        This method constructs the progress bar string to be printed to standard out
+        """This method constructs the progress bar string to be printed to standard out
         """
         progress = float(self.current_value) / float(self.max_value)
         num_completed = floor(progress * self.width)
@@ -84,16 +121,20 @@ class Progress_Bar():
         progress_string = complete_string + incomplete_string
         return progress_string
 
-    def __finish_message(self):
-        progress = int(self.current_value / self.max_value)
-        if self.finish_message is None or progress is not 1:
-            return ""
-        return self.finish_message
+    def __status(self):
+        """This method returns the status string"""
+        progress = float(self.current_value) / float(self.max_value) * 100
+        if progress < 100.0 and self.current_message is not None:
+            return self.current_message
+        elif progress == 100.0 and self.finish_message is not None:
+            return self.finish_message
+        elif progress > 100.0 and self.overflow_message is not None:
+            return self.overflow_message
+        # Corresponding message string is None.
+        return ""
 
     def __print_bar(self):
-        """
-        This method sends the constructed bar string to GlamourPrint to have standard out updated.
-        """
+        """This method sends the constructed bar string to GlamourPrint to have standard out updated."""
         #@TODO Ensure that this will perform reliably on other terminals.
         bar = ""
         for bar_format in self.bar_format:
@@ -104,13 +145,23 @@ class Progress_Bar():
         gp.reprint(bar)
 
     def __update_percent(self):
+        """This method returns a percentage of completion as a string"""
         progress = float(self.current_value) / float(self.max_value) * 100
         return self.percent_format % progress
 
     def determine_operation(self, match):
-        operation_dict = {"$(bar)": self.__create_bar, "$(percent)": self.__update_percent, "$(finish_message)": self.__finish_message}
-        match = match.lower().strip('\n')
-        # print "Matching:", match
+        """This method determines the operations specified in the format string and returns the
+           corresponding function.
+
+        Keyword arguments:
+        match   -- The string specifier to be matched with a function.
+                    $(bar) : A progress bar
+                    $(percent) : The percentage of completion
+                    $(status) : The status message
+
+        """
+        operation_dict = {"$(bar)": self.__create_bar, "$(percent)": self.__update_percent, "$(status)": self.__status}
+        match = match.lower().strip('\n') # Sanitize the string
         try:
             return operation_dict[match]
         except KeyError:

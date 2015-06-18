@@ -51,3 +51,12 @@ def glamour_print(segments, glamour):
         glamour_string += colored(segment, g['color'], attrs=g['attr'])
     sys.stdout.write(glamour_string)
     sys.stdout.flush()
+
+class Animator():
+    def __init__(self, chars=["-", "/", "|"]):
+        self.chars = chars
+        self.index = 0
+
+    def update(self):
+        self.index += 1
+        return self.chars[len(self.chars) % self.index]
