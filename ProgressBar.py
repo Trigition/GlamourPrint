@@ -7,16 +7,28 @@ import inspect
 
 class Progress_Bar():
 
-    def __init__(self, max_value, current_value=0, width=10, format_str="", complete=".", incomplete=" "):
+    def __init__(self,
+                 max_value, current_value=0,
+                 width=10,
+                 format_str="PROGRESS BAR V.01 $(percent): [$(bar)] $(finish_message)",
+                 complete=".", incomplete=" ",
+                 finish_message="Done!"):
         self.max_value = max_value
         self.current_value = current_value
+
         self.width = width
         self.format = format_str
-        self.percent_format = "%6.2f%% "
+        self.percent_format = "%6.2f%%"
+
         self.complete = complete
         self.incomplete = incomplete
+
         self.complete_color = None
         self.incomplete_color = None
+
+        self.finish_message=finish_message
+
+        # Determine order of strings and operations for progress bar.
         self.bar_format = self.__parse_format()
 
     def increment(self, amount):
@@ -72,6 +84,12 @@ class Progress_Bar():
         progress_string = complete_string + incomplete_string
         return progress_string
 
+    def __finish_message(self):
+        progress = int(self.current_value / self.max_value)
+        if self.finish_message is None or progress is not 1:
+            return ""
+        return self.finish_message
+
     def __print_bar(self):
         """
         This method sends the constructed bar string to GlamourPrint to have standard out updated.
@@ -90,7 +108,7 @@ class Progress_Bar():
         return self.percent_format % progress
 
     def determine_operation(self, match):
-        operation_dict = {"$(bar)": self.__create_bar, "$(percent)": self.__update_percent}
+        operation_dict = {"$(bar)": self.__create_bar, "$(percent)": self.__update_percent, "$(finish_message)": self.__finish_message}
         match = match.lower().strip('\n')
         # print "Matching:", match
         try:
