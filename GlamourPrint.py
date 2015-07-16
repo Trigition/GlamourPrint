@@ -53,10 +53,10 @@ def glamour_print(segments, glamour):
     sys.stdout.flush()
 
 class Animator():
-    def __init__(self, chars=["-", "/", "|"]):
+    def __init__(self, chars=["-", "\\", "|", "-", "/"]):
         self.chars = chars
         self.index = 0
 
     def update(self):
         self.index += 1
-        return self.chars[len(self.chars) % self.index]
+        return self.chars[self.index % len(self.chars)]
