@@ -1,2 +1,3 @@
 # GlamourPrint
-Just some tools I created in Python for 'fancy' terminal output.
+Just some tools I created in various languages for 'fancy' terminal output
+
