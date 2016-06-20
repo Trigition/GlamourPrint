@@ -13,6 +13,12 @@ DLL *get_new_list() {
     return new_list;
 }
 
+/**
+ * This function creates a new DLL_Item wrapper around
+ * the input data.
+ * @param item The item to be encapsulated
+ * @return A new DLL Item
+ */
 DLL_Item *get_new_item(void *item) {
     // Allocate space
     DLL_Item *new_item = malloc(sizeof(DLL_Item));
@@ -20,6 +26,22 @@ DLL_Item *get_new_item(void *item) {
     new_item->next = NULL;
     new_item->prev = NULL;
     return new_item;
+}
+
+/**
+ * This function 'adds' list two to one. The contents of
+ * list two are 'moved' to list one. This is a destructive process
+ * and the reference to list two will be freed.
+ */
+void add_list(DLL *list_one, DLL *list_two) {
+    DLL_Item *cur_item;
+    // While contents in list two...
+    while (list_two->length > 0) {
+        cur_item = pop(list_two);
+        append(list_one, cur_item->item);
+        free(cur_item);
+    }
+    free(list_two);
 }
 
 /**
@@ -123,6 +145,48 @@ DLL_Item *pop(DLL *list) {
     first_item->next = NULL;
     first_item->prev = NULL;
     return first_item;
+}
+
+/**
+ * This functions deletes an item in a list at the given index. This 
+ * function also ensures that the given index is within the defined 
+ * bounds of the list. If any out of bounds error occurs, then NULL
+ * is returned. Otherwise the function returns the item deleted.
+ *
+ * @param list The list holding the item to be deleted.
+ * @param index The index of the item.
+ * @return The item to be deleted. Returns NULL if this cannot be done.
+ */
+DLL_Item *delete_at(DLL *list, unsigned int index) {
+    DLL_Item *indexed;
+    if (index > list->length - 1) {
+        // Impossible to find requested item
+        return NULL;
+    } else if (index == list->length - 1) {
+        // Essentially truncating
+        return truncate(list);
+    } else if (index == 0) {
+        // Essentially popping
+        return pop(list);
+    }
+    // Goto index
+    unsigned int i;
+    indexed = list->head;
+    while(i < index) {
+        indexed = indexed->next;
+        i++;
+    }
+    // Iterator is now at the requested item
+    // Update all pointers and ensure that there is a clean removal from
+    // the list. The removed item is also sanitized.
+    DLL_Item *tmp = indexed->prev;
+    tmp->next = indexed->next;
+    indexed->next->prev = tmp;
+
+    indexed->next = NULL;
+    indexed->prev = NULL;
+
+    return indexed;
 }
 
 /**

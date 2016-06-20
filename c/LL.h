@@ -19,6 +19,8 @@ typedef struct list {
 DLL *get_new_list();
 DLL_Item *get_new_item(void *item);
 
+void add_list(DLL *list_one, DLL *list_two);
+
 void append(DLL *list, void *item);
 void prepend(DLL *list, void *item);
 

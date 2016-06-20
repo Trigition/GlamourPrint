@@ -1,6 +1,11 @@
 #ifndef _GLAMOURPRINT_H_
 #define _GLAMOURPRINT_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "LL.h"
+
 typedef unsigned int uint;
 
 typedef struct out_segment {
@@ -10,7 +15,6 @@ typedef struct out_segment {
 } output_segment;
 
 void reprint(char *line_str);
-void colored_string();
-
+DLL *colored_string(char *base_string, char *color);
 
 #endif
