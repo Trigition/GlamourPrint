@@ -3,18 +3,21 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "LL.h"
+#include "colors.h"
 
 typedef unsigned int uint;
 
-typedef struct out_segment {
+typedef struct outsegment {
     char *string;
+    char *suffix;
+    char *prefix;
     uint length;
-    char *color;
-} output_segment;
+} Out_Segment;
 
 void reprint(char *line_str);
-DLL *colored_string(char *base_string, char *color);
-
+Out_Segment *colored_string(char *base_string, char *color);
+char *compile_outsegment(Out_Segment *segment);
 #endif
